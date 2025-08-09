@@ -261,7 +261,8 @@ class AsyncPerformanceTester:
             async def process_response():
                 nonlocal first_token_received, first_token_time
                 for chunk in llm.response(
-                    "perf_test", [{"role": "user", "content": sentence}]
+                    "perf_test", [{"role": "user", "content": sentence}],
+                    conn=None
                 ):
                     if not first_token_received and chunk.strip() != "":
                         first_token_time = time.time() - sentence_start
