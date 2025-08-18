@@ -80,7 +80,7 @@ class LLMProvider(LLMProviderBase):
                 logger.bind(tag=TAG).warning("No user messages found in dialogue")
             
             # 构建请求参数
-            device_id = conn.device_id;
+            device_id = conn.device_id.upper();
             logger.bind(tag=TAG).info(f"device_id: {device_id}")
             logger.bind(tag=TAG).info(f"conn object type: {type(conn)}")
 
@@ -172,7 +172,7 @@ class LLMProvider(LLMProviderBase):
             logger.bind(tag=TAG).info(f"kwargs: {json.dumps(kwargs, ensure_ascii=False)}")
 
             # 构建请求参数
-            device_id = conn.device_id
+            device_id = conn.device_id.upper()
             logger.bind(tag=TAG).info(f"device_id: {device_id}")
 
             request_json = {
