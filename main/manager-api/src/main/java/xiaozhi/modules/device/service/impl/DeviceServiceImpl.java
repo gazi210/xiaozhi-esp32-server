@@ -134,6 +134,10 @@ public class DeviceServiceImpl extends BaseServiceImpl<DeviceDao, DeviceEntity> 
         // 清理redis缓存
         redisUtils.delete(cacheDeviceKey);
         redisUtils.delete(deviceKey);
+
+        // 添加：清除智能体设备数量缓存
+        redisUtils.delete(RedisKeys.getAgentDeviceCountById(agentId));
+
         return true;
     }
 
@@ -165,6 +169,7 @@ public class DeviceServiceImpl extends BaseServiceImpl<DeviceDao, DeviceEntity> 
         DeviceReportRespDTO.Websocket websocket = new DeviceReportRespDTO.Websocket();
         // 从系统参数获取WebSocket URL，如果未配置则使用默认值
         String wsUrl = sysParamsService.getValue(Constant.SERVER_WEBSOCKET, true);
+        websocket.setToken("");
         if (StringUtils.isBlank(wsUrl) || wsUrl.equals("null")) {
             log.error("WebSocket地址未配置，请登录智控台，在参数管理找到【server.websocket】配置");
             wsUrl = "ws://xiaozhi.server.com:8000/xiaozhi/v1/";
@@ -225,6 +230,16 @@ public class DeviceServiceImpl extends BaseServiceImpl<DeviceDao, DeviceEntity> 
 
     @Override
     public void unbindDevice(Long userId, String deviceId) {
+        // 先查询设备信息，获取agentId
+        DeviceEntity device = baseDao.selectById(deviceId);
+        if (device == null) {
+            return;
+        }
+        if (StringUtils.isNotBlank(device.getAgentId())) {
+            // 清除智能体设备数量缓存
+            redisUtils.delete(RedisKeys.getAgentDeviceCountById(device.getAgentId()));
+        }
+
         UpdateWrapper<DeviceEntity> wrapper = new UpdateWrapper<>();
         wrapper.eq("user_id", userId);
         wrapper.eq("id", deviceId);
@@ -459,6 +474,9 @@ public class DeviceServiceImpl extends BaseServiceImpl<DeviceDao, DeviceEntity> 
         entity.setUpdater(userId);
         entity.setAutoUpdate(1);
         baseDao.insert(entity);
+
+        // 添加：清除智能体设备数量缓存
+        redisUtils.delete(RedisKeys.getAgentDeviceCountById(dto.getAgentId()));
     }
 
     /**
